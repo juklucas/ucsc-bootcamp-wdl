@@ -19,8 +19,6 @@ task indexBam {
         String dockerImage = "biocontainers/samtools@sha256:da61624fda230e94867c9429ca1112e1e77c24e500b52dfc84eaf2f5820b4a2a"
     }
 
-    String indexFileName = "~{inputBam}.bai"
-
     command <<<
 
         set -o pipefail
@@ -28,11 +26,18 @@ task indexBam {
         set -u
         set -o xtrace
 
-        samtools index ~{inputBam}
+        ## Get basename of file
+        inputBamFileName=$(basename -- "~{inputBam}")
+        
+        ## copy file to working dir (so index file is written in working dir)
+        cp ~{inputBam} .
+        
+        ## index the bam file
+        samtools index $inputBamFileName
     >>>
 
     output {
-        File bamIndex = indexFileName
+        File bamIndex = glob("*bam.bai")[0]
     }
 
     runtime {
